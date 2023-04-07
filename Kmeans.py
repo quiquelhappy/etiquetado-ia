@@ -1,7 +1,6 @@
 __authors__ = ['1636461', '1636054', '1638922']
 __group__ = 'DJ.12'
 
-import numpy
 import numpy as np
 import utils
 
@@ -28,7 +27,7 @@ class KMeans:
         self._init_X(X)
         self._init_options(options)  # DICT options
 
-    def _init_X(self, X: numpy.matrix):
+    def _init_X(self, X: np.matrix):
         """Initialization of all pixels, sets X as an array of data in vector form (PxD)
             Args:
                 X (list or np.array): list(matrix) of all pixel values
@@ -150,9 +149,10 @@ class KMeans:
         """
         return np.array_equiv(self.old_centroids, self.centroids)
 
-    # ----------------------------- ?
+    # ----- REST OF KMEANS METHODS -----
 
-    # Runs K-Means algorithm until it converges or until the number of iterations is smaller than the maximum number of iterations.
+    # Runs K-Means algorithm until it converges or until the number of iterations is smaller than the maximum number
+    # of iterations.
     def fit(self):
         """
         Runs K-Means algorithm until it converges or until the number
@@ -204,7 +204,7 @@ class KMeans:
 
 
 # from KMeans
-def distance(X: numpy.array, C: numpy.array) -> np.array:
+def distance(X: np.array, C: np.array) -> np.array:
     """
     Calculates the distance between each pixel and each centroid
     Args:
