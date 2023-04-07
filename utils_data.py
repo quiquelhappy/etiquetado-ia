@@ -4,6 +4,7 @@ import os
 from PIL import Image
 import matplotlib.pyplot as plt
 import math
+
 def read_dataset(ROOT_FOLDER = './images/', gt_json='./test/gt.json', w=60, h=80):
     """
         reads the dataset (train and test), returns the images and labels (class and colors) for both sets
@@ -57,7 +58,7 @@ def load_imgs(train_img_names, test_img_names, w=60, h=80):
 def read_one_img(img_name, w=60, h=80):
     img = Image.open(img_name)
 
-    img = img.convert("RGB")
+    img = img.convert("L")
 
     if img.size != (w, h):
         img = img.resize((w, h))
@@ -110,6 +111,7 @@ def Plot3DCloud(km, rows=1, cols=1, spl_id=1):
     ax.set_zlabel('dim 3')
     return ax
 
+
 def visualize_k_means(kmeans, img_shape):
     def prepare_img(x, img_shape):
         x = np.clip(x.astype('uint8'), 0, 255)
@@ -129,7 +131,6 @@ def visualize_k_means(kmeans, img_shape):
     plt.axis('off')
 
     fig.add_subplot(132)
-
     plt.imshow(X_compressed)
     plt.axis('off')
     plt.title('kmeans')

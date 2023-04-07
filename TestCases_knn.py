@@ -1,12 +1,9 @@
-import unittest
 import pickle
-import json
-import os
-import numpy as np
+import unittest
+
 import KNN as k
 from KNN import *
 from utils import *
-#from skimage import io
 
 
 class TestCases(unittest.TestCase):
@@ -44,6 +41,7 @@ class TestCases(unittest.TestCase):
             knn = KNN(train_imgs, train_labels)
             preds = knn.predict(self.test_cases['test_input'][ix][0], self.test_cases['rnd_K'][ix])
             np.testing.assert_array_equal(preds, self.test_cases['get_class'][ix])
+
 
 if __name__ == "__main__":
     unittest.main()
