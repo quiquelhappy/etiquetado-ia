@@ -173,30 +173,41 @@ class KMeans:
         if self.options['fitting'].lower() == 'wcd':
             # get nearest, and compute average
             return np.average(np.power(distance(self.X, self.centroids).min(axis=1), 2))
-        else:
-            raise Exception("in this first assigment no other fittings are specified for us to code")
 
-    def find_bestK(self, max_K):
+        elif self.options['fitting'].lower() == 'fisher':
+            intra = self.intra_class_distance()
+            inter = self.inter_class_distance()
+            self.WCD = self.fisher_distance(intra, inter)
+
+        elif self.options['fitting'].lower() == 'inter':
+            self.WCD = self.inter_class_distance()
+
+
+        return self.WCD
+
+    def find_bestK(self, max_K, threshold=20):
         """
-         sets the best k anlysing the results up to 'max_K' clusters
+        Sets the best K by analyzing the results up to 'max_K' clusters.
+        The threshold parameter determines the minimum improvement required for K.
+
+        Args:
+            max_K (int): The maximum number of clusters to analyze.
+            threshold (float): The minimum improvement threshold as a percentage (default: 20%).
+
+        Returns:
+            int: The best value of K.
         """
-        # we start with K=2, because K=1 wouldn't have any items to categorize
         self.K = 2
-
         wcd = 0.0
-        # we iterate until we find max_k
+
         for self.K in range(2, max_K):
-            # we save the previous value for computing the quocient
             prev = wcd
             self.fit()
             wcd = self.withinClassDistance()
 
-            # if we already did the first iteration, wcd should hold a value, and we can compute
-            # the quocient now
             if self.K > 2:
-                # if no significant improvement has been made, we return the previous K, which will hold
-                # the last significant improvement
-                if 1 - (wcd / prev) < self.options['improvement_threshold'] / 100.0:
+                improvement = 1 - (wcd / prev)
+                if improvement < (threshold / 100.0):
                     self.K -= 1
                     break
 
