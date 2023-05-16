@@ -1,4 +1,4 @@
-__authors__ = ['1498396','1496793','1606206']
+__authors__ = ['1636054','1638922','1636461']
 __group__ = 'DJ.12'
 
 import numpy as np
@@ -18,10 +18,17 @@ class KNN:
         :param train_data: PxMxNx3 matrix corresponding to P color images
         :return: assigns the train set to the matrix self.train_data shaped as PxD (P points in a D dimensional space)
         """
-        dim = np.array([], dtype = float) #nos aseguramos de que sea float
-        dim = np.shape(train_data) #cogemos las dimensiones 
-        self.train_data = train_data.reshape(dim[0], 14400) #redimensionamos
-        self.train_data = self.train_data.astype(type(np.inf))
+        # Convierte los datos de entrenamiento en una matriz de tipo float y la asigna a D
+        D = np.array(train_data, dtype=float)
+
+        # Obtiene la forma de la matriz de entrenamiento y la asigna a D
+        D = np.shape(train_data)
+
+        # Reorganiza los datos de entrenamiento en una matriz de tamaño PxD
+        # donde D = 4800*3, esto significa que cada imagen en train_data
+        # se convierte en un punto con 4800x3 dimensiones
+        self.train_data = train_data.reshape(D[0], (4800 * 3))
+
 
     def get_k_neighbours(self, test_data, k):
         """
@@ -31,32 +38,41 @@ class KNN:
         :return: the matrix self.neighbors is created (NxK)
                  the ij-th entry is the j-th nearest train point to the i-th test point
         """
-        dim = np.shape(test_data) #cogemos las dimensiones
-        test_data = test_data.reshape(dim[0], dim[1]*dim[2]*dim[3]) #redimensionamos
-        X = cdist(test_data, self.train_data, "euclidean")  #cogemos las distancias euclidianas
-        Y = np.argsort(X, axis = 1) #ordenamos
-        Z = Y[:,0:k] #cogemos los K valores
-        self.neighbors = Z.astype(str) #pasamos el array a string
-        for i in range(len(Z)):
-            for j in range(len(Z[i])):
-                self.neighbors[i][j] = self.labels[Z[i][j]]  #para cada id que tenemos ponemos su equivalente en prenda
+        D = np.shape(test_data)
+        # Redimensionamos los datos de prueba para que sean una matriz de tamaño QxD
+        test_data = test_data.reshape(test_data.shape[0], -1)
+        # Calculamos las distancias euclidianas entre los datos de prueba y los datos de entrenamiento
+        dist = cdist(test_data, self.train_data)
+        # Obtenemos los índices de los k vecinos más cercanos para cada punto de prueba
+        values = np.argsort(dist)[:, :k]
+        # Obtenemos los valores de etiqueta correspondientes a los índices de los vecinos más cercanos
+        self.neighbors = self.labels[values]
 
     def get_class(self):
         """
-        Get the class by maximum voting
+        Get the class by maximum voting.
         :return: 2 numpy array of Nx1 elements.
                 1st array For each of the rows in self.neighbors gets the most voted value
                             (i.e. the class at which that row belongs)
                 2nd array For each of the rows in self.neighbors gets the % of votes for the winning class
         """
-        masRepetidos = np.array([])
-        
-        for element in self.neighbors:
-            prenda, repeticiones = np.unique(element, return_counts=True) #para cada elemento cogemos las veces que sale
-            maximo = np.argmax(repeticiones) #cogemos el que mas sale
-            masRepetidos = np.append(masRepetidos, prenda[maximo]) 
-            
-        return masRepetidos
+        # Create an empty array to store the most voted classes for each row
+        repeated = np.array([])
+
+        # Iterate over each row in the neighbors array
+        for i in self.neighbors:
+            # Count how many times each value appears in the row
+            # and get the unique values and their counts
+            clothe, n = np.unique(i, return_counts=True)
+
+            # Find the index of the value that appears most frequently
+            max = np.argmax(n)
+
+            # Append the most frequent value to the repeated array
+            repeated = np.append(repeated, clothe[max])
+
+            # Return the repeated array, which contains the most frequent class for each row in neighbors
+        return repeated
 
     def predict(self, test_data, k):
         """
