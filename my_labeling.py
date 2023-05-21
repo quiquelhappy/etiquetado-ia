@@ -1,4 +1,4 @@
-__authors__ = '1496793,1606206,1498396'
+__authors__ = ['1636054','1638922','1636461']
 __group__ = 'DJ.12'
 
 import numpy as np
@@ -52,25 +52,24 @@ if __name__ == '__main__':
 
     # Load all the images and GT
     train_imgs, train_class_labels, train_color_labels, \
-        test_imgs, test_class_labels, test_color_labels = read_dataset(ROOT_FOLDER='./images/',
-                                                                       gt_json='./images/gt.json')
+        test_imgs, test_class_labels, test_color_labels = read_dataset()
 
     # List with all the existant classes
     classes = list(set(list(train_class_labels) + list(test_class_labels)))
 
     ## You can start coding your functions here
 
-    kme = km.KMeans(test_imgs[30], 2)
+    kme = km.KMeans(train_imgs[0], 3)
     kme.fit()
-
+    visualize_k_means(kme, [80,60,3])
     a = kn.KNN(train_imgs, train_class_labels)
 
     # prueba retrieval_by_color
-    color = 'Blue'
+    color = 'Black'
     retrieval_by_color(test_imgs, test_color_labels, color)
 
     # prueba retrieval_by_shape
-    shape = 'Jeans'
+    shape = 'Shorts'
     retrieval_by_shape(test_imgs, test_class_labels, shape)
 
     # prueba retrieval_combined
@@ -110,12 +109,12 @@ if __name__ == '__main__':
             a.fit()
             print("first: " + "k = " + str(k) + " n_iter = " + str(a.num_iter))
 
-            opciones['km_init'] = 'last'
+            opciones['km_init'] = 'random'
             a = km.KMeans(X, K=k, options=opciones)
             a.fit()
             print("last: " + "k = " + str(k) + " n_iter = " + str(a.num_iter))
 
-            opciones['km_init'] = 'mid'
+            opciones['km_init'] = 'custom'
             a = km.KMeans(X, K=k, options=opciones)
             a.fit()
             print("half: " + "k = " + str(k) + " n_iter = " + str(a.num_iter))
