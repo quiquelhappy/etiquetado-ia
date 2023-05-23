@@ -2,8 +2,6 @@ __authors__ = ['1636054','1638922','1636461']
 __group__ = 'DJ.12'
 
 import numpy as np
-import math
-import operator
 from scipy.spatial.distance import cdist
 
 class KNN:
@@ -12,7 +10,7 @@ class KNN:
         self._init_train(train_data)
         self.labels = np.array(labels)
 
-    def _init_train(self,train_data):
+    def _init_train(self, train_data):
         """
         initializes the train data
         :param train_data: PxMxNx3 matrix corresponding to P color images
@@ -27,7 +25,7 @@ class KNN:
         # Reorganiza los datos de entrenamiento en una matriz de tamaño PxD
         # donde D = 4800*3, esto significa que cada imagen en train_data
         # se convierte en un punto con 4800x3 dimensiones
-        self.train_data = train_data.reshape(D[0], (4800 * 3))
+        self.train_data = train_data.reshape(D[0], (4800))
 
 
     def get_k_neighbours(self, test_data, k):
@@ -57,22 +55,14 @@ class KNN:
                 2nd array For each of the rows in self.neighbors gets the % of votes for the winning class
         """
         # Create an empty array to store the most voted classes for each row
-        repeated = np.array([])
+        list_fr = []
 
-        # Iterate over each row in the neighbors array
-        for i in self.neighbors:
-            # Count how many times each value appears in the row
-            # and get the unique values and their counts
-            clothe, n = np.unique(i, return_counts=True)
+        for elementList in self.neighbors:
+            list_arr = elementList.tolist()
+            list_fr.append(max(list_arr, key=list_arr.count))
 
-            # Find the index of the value that appears most frequently
-            max = np.argmax(n)
+        return np.array(list_fr)
 
-            # Append the most frequent value to the repeated array
-            repeated = np.append(repeated, clothe[max])
-
-            # Return the repeated array, which contains the most frequent class for each row in neighbors
-        return repeated
 
     def predict(self, test_data, k):
         """
@@ -81,6 +71,6 @@ class KNN:
         :param k:         :param k:  the number of neighbors to look at
         :return: the output form get_class (2 Nx1 vector, 1st the classm 2nd the  % of votes it got
         """
-        
+
         self.get_k_neighbours(test_data, k)
         return self.get_class()
