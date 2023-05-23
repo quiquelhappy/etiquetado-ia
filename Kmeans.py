@@ -1,6 +1,8 @@
 __authors__ = ['1636461', '1636054', '1638922']
 __group__ = 'DJ.12'
 
+import warnings
+
 import numpy as np
 import utils
 
@@ -140,7 +142,10 @@ class KMeans:
         for i in range(self.K):
             # gets the mean of all values with label j (i), which satisfies the formula
             # in the PDF of point 2, section KMeans
-            self.centroids[i] = np.mean(self.X[np.where(i == self.labels)], dtype=np.float64, axis=0)
+
+            targets = self.X[np.where(i == self.labels)]
+            if len(targets) > 0:
+                self.centroids[i] = np.mean(targets, dtype=np.float64, axis=0)
 
     # Checks if there is a difference between current and old centroids
     def converges(self):
