@@ -5,7 +5,6 @@ import numpy as np
 import Kmeans as km
 import KNN as kn
 from utils_data import read_dataset, visualize_k_means, visualize_retrieval
-import matplotlib.pyplot as plt
 from PIL import Image
 
 
