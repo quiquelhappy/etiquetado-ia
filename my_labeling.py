@@ -95,7 +95,6 @@ if __name__ == '__main__':
     accuracy_values = []
 
 
-
     for k in range(kInicial, maxK):
         testColorAccuracy = km.KMeans(test_imgs[30], k)
         testColorAccuracy.fit()
@@ -107,8 +106,8 @@ if __name__ == '__main__':
     plt.plot(range(kInicial, maxK), accuracy_values)
     plt.xlabel('K')
     plt.ylabel('Accuracy')
-    plt.title('Color Accuracy vs. K')
     plt.show()
+
 
     # prueba de las mejoras
     path = "./images/train/1529.jpg"
