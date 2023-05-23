@@ -4,8 +4,9 @@ __group__ = 'DJ.12'
 import numpy as np
 import Kmeans as km
 import KNN as kn
-from utils_data import read_dataset, visualize_k_means, visualize_retrieval
+from utils_data import read_dataset, visualize_k_means, visualize_retrieval, Plot3DCloud
 from PIL import Image
+import matplotlib.pyplot as plt
 
 
 def retrieval_by_color(images, Kmeans_results, color, topN=10):
@@ -61,14 +62,17 @@ if __name__ == '__main__':
     kme = km.KMeans(train_imgs[0], 3)
     kme.fit()
     visualize_k_means(kme, [80,60,3])
+    Plot3DCloud(kme)
+
+
     a = kn.KNN(train_imgs, train_class_labels, 3)
 
     # prueba retrieval_by_color
-    color = 'Black'
+    color = 'Blue'
     retrieval_by_color(test_imgs, test_color_labels, color)
 
     # prueba retrieval_by_shape
-    shape = 'Shorts'
+    shape = 'Shirts'
     retrieval_by_shape(test_imgs, test_class_labels, shape)
 
     # prueba retrieval_combined
@@ -85,14 +89,26 @@ if __name__ == '__main__':
     color_etiquetes = np.array([])
     kInicial = 2
     maxK = 30
+    color_etiquetes = np.array([])
+    kInicial = 2
+    maxK = 30
+    accuracy_values = []
+
+
 
     for k in range(kInicial, maxK):
         testColorAccuracy = km.KMeans(test_imgs[30], k)
         testColorAccuracy.fit()
         color_etiquetes = np.append(color_etiquetes, km.get_colors(testColorAccuracy.centroids))
         percentatge_color = get_color_accuracy(color_etiquetes, test_color_labels)
-
+        accuracy_values.append(round(percentatge_color, 2))
         print("k: ", k, "Percentatge color: ", round(percentatge_color, 2))
+
+    plt.plot(range(kInicial, maxK), accuracy_values)
+    plt.xlabel('K')
+    plt.ylabel('Accuracy')
+    plt.title('Color Accuracy vs. K')
+    plt.show()
 
     # prueba de las mejoras
     path = "./images/train/1529.jpg"
