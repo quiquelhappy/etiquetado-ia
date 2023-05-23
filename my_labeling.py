@@ -61,7 +61,7 @@ if __name__ == '__main__':
     kme = km.KMeans(train_imgs[0], 3)
     kme.fit()
     visualize_k_means(kme, [80,60,3])
-    a = kn.KNN(train_imgs, train_class_labels)
+    a = kn.KNN(train_imgs, train_class_labels, 3)
 
     # prueba retrieval_by_color
     color = 'Black'
@@ -75,7 +75,7 @@ if __name__ == '__main__':
     retrieval_combined(test_imgs, test_class_labels, test_color_labels, shape, color)
 
     # prueba shape accuracy
-    shape_acc = kn.KNN(train_imgs, train_class_labels)
+    shape_acc = kn.KNN(train_imgs, train_class_labels, 3)
     shape_acc.predict(test_imgs, 60)
 
     shape_percent = get_shape_accuracy(shape_acc.get_class(), test_class_labels)

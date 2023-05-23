@@ -5,12 +5,12 @@ import numpy as np
 from scipy.spatial.distance import cdist
 
 class KNN:
-    def __init__(self, train_data, labels):
+    def __init__(self, train_data, labels, multiplier=1):
 
-        self._init_train(train_data)
+        self._init_train(train_data, multiplier)
         self.labels = np.array(labels)
 
-    def _init_train(self, train_data):
+    def _init_train(self, train_data, multiplier=1):
         """
         initializes the train data
         :param train_data: PxMxNx3 matrix corresponding to P color images
@@ -25,7 +25,7 @@ class KNN:
         # Reorganiza los datos de entrenamiento en una matriz de tamaño PxD
         # donde D = 4800*3, esto significa que cada imagen en train_data
         # se convierte en un punto con 4800x3 dimensiones
-        self.train_data = train_data.reshape(D[0], (4800))
+        self.train_data = train_data.reshape(D[0], (4800*multiplier))
 
 
     def get_k_neighbours(self, test_data, k):
