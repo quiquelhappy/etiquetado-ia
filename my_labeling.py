@@ -1,4 +1,4 @@
-__authors__ = ['1636054','1638922','1636461']
+__authors__ = ['1636054', '1638922', '1636461']
 __group__ = 'DJ.12'
 
 import numpy as np
@@ -30,26 +30,107 @@ def retrieval_by_shape(images, Kmeans_results, shape, topN=10):
 def retrieval_combined(images, shape_labels, color_labels, shape, color, topN=10):  # podriamos dejarlo es facil
     visualize_retrieval(
         np.array([
-            images[i] for i, (test_shape, test_color) in enumerate(zip(shape_labels, color_labels)) if shape == test_shape and color in test_color
+            images[i] for i, (test_shape, test_color) in enumerate(zip(shape_labels, color_labels)) if
+            shape == test_shape and color in test_color
         ]),
         topN
     )
 
 
 def get_shape_accuracy(knn_labels, gt):
-    return (np.float64(np.unique(knn_labels == gt, return_counts=True)[1][1]) / np.float64(
-        len(knn_labels)
-    )) * np.float64(100)
+    unique_labels, label_counts = np.unique(knn_labels == gt, return_counts=True)
+    return 100 * label_counts[1] / len(knn_labels)
 
 
 def get_color_accuracy(kmeans_labels, gt):
     return sum(
-        sum(col == ct for col, ct in zip(np.unique(color), gt[pos])) / len(gt[pos]) for pos, color in enumerate(kmeans_labels)
-      ) / len(kmeans_labels) * 100
+        sum(col == ct for col, ct in zip(np.unique(color), gt[pos])) / len(gt[pos]) for pos, color in
+        enumerate(kmeans_labels)
+    ) / len(kmeans_labels) * 100
+
+
+def print_plot(x, y, xtag, ytag, title, multiple=False):
+    if multiple:
+        for line in y:
+            plt.plot(x, line)
+    else:
+        plt.plot(x, y)
+    plt.xlabel(xtag)
+    plt.ylabel(ytag)
+    plt.title(title)
+    plt.plot()
+    plt.show()
+
+
+def accuracy_test(min, max, shape=True, color=True):
+    color_etiquetes = np.array([])
+    x_axis = range(min, max)
+
+    color_accuracy = []
+    shape_accuracy = []
+
+    for k in x_axis:
+        # shape
+        if shape:
+            shape_acc = kn.KNN(train_imgs, train_class_labels, 3)
+            shape_acc.predict(test_imgs, k)
+            shape_percent = get_shape_accuracy(shape_acc.get_class(), test_class_labels)
+            shape_accuracy.append(shape_percent)
+
+        # color
+        if color:
+            color_accuracy_test = km.KMeans(test_imgs[30], k)
+            color_accuracy_test.fit()
+            color_etiquetes = np.append(color_etiquetes, km.get_colors(color_accuracy_test.centroids))
+            percentatge_color = get_color_accuracy(color_etiquetes, test_color_labels)
+            color_accuracy.append(round(percentatge_color, 2))
+
+        print("k: ", k, "% color: ", round(percentatge_color, 2), "% shape: ", shape_percent)
+
+    print_plot(x_axis, shape_accuracy, "k", "Accuracy %", "Shape Accuracy")
+    print_plot(x_axis, color_accuracy, "k", "Accuracy %", "Color Accuracy")
+
+
+def kmeans_init_test(path, min, max, passes):
+    img = Image.open(path)
+    x = np.asarray(img)
+    opciones = {}
+
+    x_axis = range(min, max)
+    first_v_acc = []
+    random_v_acc = []
+    custom_v_acc = []
+    for j in range(passes):
+        random_v = []
+        for k in x_axis:
+
+            if j == 0:
+                opciones['km_init'] = 'first'
+                a = km.KMeans(x, K=k, options=opciones)
+                a.fit()
+                first_v_acc.append(a.num_iter)
+                print("first: k =", k, "n_iter = ", a.num_iter)
+
+                opciones['km_init'] = 'custom'
+                c = km.KMeans(x, K=k, options=opciones)
+                c.fit()
+                custom_v_acc.append(c.num_iter)
+                print("half: k =", k, "n_iter =", c.num_iter)
+
+            opciones['km_init'] = 'random'
+            b = km.KMeans(x, K=k, options=opciones)
+            b.fit()
+            random_v.append(b.num_iter)
+            print("last: k =", k, "n_iter = ", b.num_iter)
+
+        random_v_acc.append(random_v)
+
+    print_plot(x_axis, first_v_acc, 'k', 'n iterations', "KMeans, km_init=first")
+    print_plot(x_axis, random_v_acc, 'k', 'n iterations', "KMeans, km_init=random", True)
+    print_plot(x_axis, custom_v_acc, 'k', 'n iterations', "KMeans, km_init=custom")
 
 
 if __name__ == '__main__':
-
     # Load all the images and GT
     train_imgs, train_class_labels, train_color_labels, \
         test_imgs, test_class_labels, test_color_labels = read_dataset()
@@ -61,9 +142,8 @@ if __name__ == '__main__':
 
     kme = km.KMeans(train_imgs[0], 3)
     kme.fit()
-    visualize_k_means(kme, [80,60,3])
+    visualize_k_means(kme, [80, 60, 3])
     Plot3DCloud(kme)
-
 
     a = kn.KNN(train_imgs, train_class_labels, 3)
 
@@ -78,57 +158,8 @@ if __name__ == '__main__':
     # prueba retrieval_combined
     retrieval_combined(test_imgs, test_class_labels, test_color_labels, shape, color)
 
-    # prueba shape accuracy
-    shape_acc = kn.KNN(train_imgs, train_class_labels, 3)
-    shape_acc.predict(test_imgs, 60)
+    # km init
+    kmeans_init_test('./images/train/1529.jpg', 2, 14, 10)
 
-    shape_percent = get_shape_accuracy(shape_acc.get_class(), test_class_labels)
-    print("Percentatge: ", round(shape_percent, 2), "%")
-
-    # prueba color accuracy
-    color_etiquetes = np.array([])
-    kInicial = 2
-    maxK = 30
-    color_etiquetes = np.array([])
-    kInicial = 2
-    maxK = 30
-    accuracy_values = []
-
-
-    for k in range(kInicial, maxK):
-        testColorAccuracy = km.KMeans(test_imgs[30], k)
-        testColorAccuracy.fit()
-        color_etiquetes = np.append(color_etiquetes, km.get_colors(testColorAccuracy.centroids))
-        percentatge_color = get_color_accuracy(color_etiquetes, test_color_labels)
-        accuracy_values.append(round(percentatge_color, 2))
-        print("k: ", k, "Percentatge color: ", round(percentatge_color, 2))
-
-    plt.plot(range(kInicial, maxK), accuracy_values)
-    plt.xlabel('K')
-    plt.ylabel('Accuracy')
-    plt.show()
-
-
-    # prueba de las mejoras
-    path = "./images/train/1529.jpg"
-    img = Image.open(path)
-    X = np.asarray(img)
-    opciones = {}
-    opciones['km_init'] = 'mid'
-    # opciones['fitting'] = 'wcd'
-    for j in range(10):
-        for k in range(2, 14):
-            opciones['km_init'] = 'first'
-            a = km.KMeans(X, K=k, options=opciones)
-            a.fit()
-            print("first: " + "k = " + str(k) + " n_iter = " + str(a.num_iter))
-
-            opciones['km_init'] = 'random'
-            a = km.KMeans(X, K=k, options=opciones)
-            a.fit()
-            print("last: " + "k = " + str(k) + " n_iter = " + str(a.num_iter))
-
-            opciones['km_init'] = 'custom'
-            a = km.KMeans(X, K=k, options=opciones)
-            a.fit()
-            print("half: " + "k = " + str(k) + " n_iter = " + str(a.num_iter))
+    # prueba accuracy
+    accuracy_test(2, 18)
