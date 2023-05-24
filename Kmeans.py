@@ -182,7 +182,7 @@ class KMeans:
         elif self.options['fitting'].lower() == 'fisher':
             intra = self.intra_class_distance()
             inter = self.inter_class_distance()
-            self.WCD = self.fisher_distance(intra, inter)
+            self.WCD = self.fisher_coeficient(intra, inter)
 
         elif self.options['fitting'].lower() == 'inter':
             self.WCD = self.inter_class_distance()
@@ -190,14 +190,26 @@ class KMeans:
 
         return self.WCD
 
-    def find_bestK(self, max_K, threshold=20):
+    def inter_class_distance(self):
+        icd = 0
+        for i, cent in enumerate(distance(self.centroids, self.centroids)):
+            icd += np.sum(cent[i:])
+        return icd / len(self.centroids)
+
+    def intra_class_distance(self):
+        return np.sum(np.power(distance(self.X, self.centroids).min(axis=1), 2)) / self.N
+
+    def fisher_coeficient(self, intra, inter):
+        return intra / inter
+
+    def find_bestK(self, max_K):
         """
+        . test 0-50
         Sets the best K by analyzing the results up to 'max_K' clusters.
         The threshold parameter determines the minimum improvement required for K.
 
         Args:
             max_K (int): The maximum number of clusters to analyze.
-            threshold (float): The minimum improvement threshold as a percentage (default: 20%).
 
         Returns:
             int: The best value of K.
@@ -212,7 +224,7 @@ class KMeans:
 
             if self.K > 2:
                 improvement = 1 - (wcd / prev)
-                if improvement < (threshold / 100.0):
+                if improvement < (self.options['improvement_threshold'] / 100.0):
                     self.K -= 1
                     break
 
@@ -249,4 +261,4 @@ def get_colors(centroids):
         labels: list of K labels corresponding to one of the 11 basic colors
     """
     color_dist = utils.get_color_prob(centroids)
-    return [utils.colors[np.argmax(color_dist[k])] for k in range(color_dist.shape[0])]
+    return [utils.colors[np.argmax(color_dist,axis=1)]]
