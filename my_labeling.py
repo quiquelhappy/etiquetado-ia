@@ -11,37 +11,9 @@ from PIL import Image
 import matplotlib.pyplot as plt
 
 
-def retrieval_by_color(images, Kmeans_results, color, topN=10):
-    visualize_retrieval(
-        np.array([
-            images[i] for i, kmean in enumerate(Kmeans_results) if color in kmean
-        ]),
-        topN
-    )
-
-
-def retrieval_by_shape(images, Kmeans_results, shape, topN=10):
-    visualize_retrieval(
-        np.array([
-            images[i] for i, kmean in enumerate(Kmeans_results) if shape == kmean
-        ]),
-        topN
-    )
-
-
-def retrieval_combined(images, shape_labels, color_labels, shape, color, topN=10):  # podriamos dejarlo es facil
-    visualize_retrieval(
-        np.array([
-            images[i] for i, (test_shape, test_color) in enumerate(zip(shape_labels, color_labels)) if
-            shape == test_shape and color in test_color
-        ]),
-        topN
-    )
-
-
 def get_shape_accuracy(knn_labels, gt):
     unique_labels, label_counts = np.unique(knn_labels == gt, return_counts=True)
-    return 100 * label_counts[1] / len(knn_labels)
+    return label_counts[1] / len(knn_labels) * 100
 
 
 def get_color_accuracy(kmeans_labels, gt):
@@ -65,44 +37,6 @@ def print_plot(x, y, xtag, ytag, title, multiple=False):
     plt.show()
 
 
-def accuracy_test(min, max, train_imgs, test_imgs, train_class_labels, test_class_labels, test_color_labels, shape=True,
-                  color=True):
-    color_etiquetes = np.array([])
-    x_axis = range(min, max)
-
-    color_accuracy = []
-    shape_accuracy = []
-
-    for k in x_axis:
-        # shape
-        if shape:
-            shape_acc = kn.KNN(train_imgs, train_class_labels)
-            shape_acc.predict(test_imgs, k)
-            shape_percent = get_shape_accuracy(shape_acc.get_class(), test_class_labels)
-            shape_accuracy.append(shape_percent)
-
-            print("k: ", k, "% shape: ", shape_percent)
-
-        # color
-        if color:
-            sample_size = 100
-            accuracy_acc = 0
-            for i in range(sample_size):
-                color_accuracy_test = km.KMeans(test_imgs[i], k)
-                color_accuracy_test.fit()
-                color_etiquetes = km.get_colors(color_accuracy_test.centroids)
-                accuracy_acc += get_color_accuracy(color_etiquetes, test_color_labels[i])
-            percentage_color = accuracy_acc / sample_size
-            color_accuracy.append(percentage_color)
-
-            print("k: ", k, "% color: ", percentage_color)
-
-    if shape:
-        print_plot(x_axis, shape_accuracy, "k", "Accuracy %", "Shape Accuracy")
-
-    if color:
-        print_plot(x_axis, color_accuracy, "k", "Accuracy %", "Color Accuracy")
-
 
 def find_best_k_test(min, max, fitting, test_imgs, test_color_labels, cluster=10):
     x_axis = range(min, max, 5)
@@ -122,93 +56,131 @@ def find_best_k_test(min, max, fitting, test_imgs, test_color_labels, cluster=10
             accuracy_acc += get_color_accuracy(color_etiquetes, test_color_labels[i])
         percentage_color = accuracy_acc / sample_size
         accuracy_color.append(percentage_color)
-        print("threshold: ", threshold, "% color: ", percentage_color)
+        print("find best k", "threshold: ", threshold, "% color: ", percentage_color)
 
     print_plot(x_axis, accuracy_color, 'threshold', 'color accuracy', 'Find Best K ' + fitting)
 
 
-def kmeans_init_test(path, min, max, passes):
+def kmeans_init_test(path, min, max, passes, method):
     img = Image.open(path)
     x = np.asarray(img)
     opciones = {}
 
     x_axis = range(min, max)
-    first_v_acc = []
-    random_v_acc = []
-    custom_v_acc = []
+    acc = []
     for j in range(passes):
-        random_v = []
+        pass_acc = []
         for k in x_axis:
+            opciones['km_init'] = method
+            a = km.KMeans(x, K=k, options=opciones)
+            a.fit()
+            pass_acc.append(a.num_iter)
+            print("kmeans init", method, "k", k, "n_iter", a.num_iter)
 
-            if j == 0:
-                opciones['km_init'] = 'first'
-                a = km.KMeans(x, K=k, options=opciones)
-                a.fit()
-                first_v_acc.append(a.num_iter)
-                print("first: k =", k, "n_iter = ", a.num_iter)
+        acc.append(pass_acc)
 
-                opciones['km_init'] = 'custom'
-                c = km.KMeans(x, K=k, options=opciones)
-                c.fit()
-                custom_v_acc.append(c.num_iter)
-                print("half: k =", k, "n_iter =", c.num_iter)
-
-            opciones['km_init'] = 'random'
-            b = km.KMeans(x, K=k, options=opciones)
-            b.fit()
-            random_v.append(b.num_iter)
-            print("last: k =", k, "n_iter = ", b.num_iter)
-
-        random_v_acc.append(random_v)
-
-    print_plot(x_axis, first_v_acc, 'k', 'n iterations', "KMeans, km_init=first")
-    print_plot(x_axis, random_v_acc, 'k', 'n iterations', "KMeans, km_init=random", True)
-    print_plot(x_axis, custom_v_acc, 'k', 'n iterations', "KMeans, km_init=custom")
+    print_plot(x_axis, acc, 'k', 'n iterations', "KMeans, km_init="+method, True)
 
 
 class TestCases(unittest.TestCase):
     train_imgs, train_class_labels, train_color_labels, test_imgs, test_class_labels, test_color_labels = read_dataset()
     classes = list(set(list(train_class_labels) + list(test_class_labels)))
+
+    # init
+    init_source = './images/train/1529.jpg'
+
+    # retrieval
     color = 'Blue'
     shape = 'Shirts'
+    top_n = 10
 
-    def test_three_d_cloud(self):
+    # accuracy
+    accuracy_sample_size = 100
+    accuracy_min_k = 2
+    accuracy_max_k = 17
+
+    def test_a_knn_init(self):
+        kn.KNN(self.train_imgs, self.train_class_labels)
+
+    def test_a_three_d_cloud(self):
         kme = km.KMeans(self.train_imgs[0], 3)
         kme.fit()
         visualize_k_means(kme, [80, 60, 3])
         Plot3DCloud(kme)
 
-    def test_knn_init(self):
-        a = kn.KNN(self.train_imgs, self.train_class_labels)
+    def test_b_retrieval_by_color(self):
+        visualize_retrieval(
+            np.array([
+                self.test_imgs[i] for i, kmean in enumerate(self.test_color_labels) if self.color in kmean
+            ]),
+            self.top_n
+        )
 
-    def test_retrieval_by_color(self):
-        retrieval_by_color(self.test_imgs, self.test_color_labels, self.color)
+    def test_b_retrieval_by_shape(self):
+        visualize_retrieval(
+            np.array([
+                self.test_imgs[i] for i, kmean in enumerate(self.test_class_labels) if self.shape == kmean
+            ]),
+            self.top_n
+        )
 
-    def test_retrieval_by_shape(self):
-        retrieval_by_shape(self.test_imgs, self.test_class_labels, self.shape)
+    def test_b_retrieval_combined(self):
+        visualize_retrieval(
+            np.array([
+                self.test_imgs[i] for i, (test_shape, test_color) in enumerate(zip(self.test_class_labels, self.test_color_labels)) if
+                self.shape == test_shape and self.color in test_color
+            ]),
+            self.top_n
+        )
 
-    def test_retrieval_combined(self):
-        retrieval_combined(self.test_imgs, self.test_class_labels, self.test_color_labels, self.shape, self.color)
+    def test_c_kmeans_init_first(self):
+        kmeans_init_test(self.init_source, 2, 14, 10, 'first')
 
-    def test_find_best_k_wcd(self):
+    def test_c_kmeans_init_custom(self):
+        kmeans_init_test(self.init_source, 2, 14, 10, 'custom')
+
+    def test_c_kmeans_init_random(self):
+        kmeans_init_test(self.init_source, 2, 14, 10, 'random')
+
+    def test_d_find_best_k_wcd(self):
         find_best_k_test(0, 50, 'WCD', self.test_imgs, self.test_color_labels)
 
-    def test_find_best_k_inter(self):
+    def test_d_find_best_k_inter(self):
         find_best_k_test(0, 50, 'inter', self.test_imgs, self.test_color_labels)
 
-    def test_find_best_k_fisher(self):
+    def test_d_find_best_k_fisher(self):
         find_best_k_test(0, 50, 'fisher', self.test_imgs, self.test_color_labels)
 
-    def test_accuracy_color(self):
-        accuracy_test(2, 17, self.train_imgs, self.test_imgs, self.train_class_labels, self.test_class_labels,
-                      self.test_color_labels, False)
+    def test_e_accuracy_color(self):
+        x_axis = range(self.accuracy_min_k, self.accuracy_max_k)
+        color_accuracy = []
+        for k in x_axis:
+            accuracy_acc = 0
+            for i in range(self.accuracy_sample_size):
+                color_accuracy_test = km.KMeans(self.test_imgs[i], k)
+                color_accuracy_test.fit()
+                color_etiquetes = km.get_colors(color_accuracy_test.centroids)
+                accuracy_acc += get_color_accuracy(color_etiquetes, self.test_color_labels[i])
+            percentage_color = accuracy_acc / self.accuracy_sample_size
 
-    def test_accuracy_shape(self):
-        accuracy_test(2, 17, self.train_imgs, self.test_imgs, self.train_class_labels, self.test_class_labels,
-                      self.test_color_labels, True, False)
+            color_accuracy.append(percentage_color)
+            print("color accuracy", "k", k, "% acc", percentage_color)
 
-    def test_kmeans_init(self):
-        kmeans_init_test('./images/train/1529.jpg', 2, 14, 10)
+        print_plot(x_axis, color_accuracy, "k", "Accuracy %", "Color Accuracy")
+
+    def test_e_accuracy_shape(self):
+        x_axis = range(self.accuracy_min_k, self.accuracy_max_k)
+        shape_accuracy = []
+
+        for k in x_axis:
+            shape_acc = kn.KNN(self.train_imgs, self.train_class_labels)
+            shape_acc.predict(self.test_imgs, k)
+            shape_percent = get_shape_accuracy(shape_acc.get_class(), self.test_class_labels)
+
+            shape_accuracy.append(shape_percent)
+            print("shape accuracy", "k", k, "% acc", shape_percent)
+
+        print_plot(x_axis, shape_accuracy, "k", "Accuracy %", "Shape Accuracy")
 
 
 if __name__ == '__main__':
