@@ -46,7 +46,7 @@ def get_shape_accuracy(knn_labels, gt):
 
 def get_color_accuracy(kmeans_labels, gt):
     match = 0
-    for f in set(kmeans_labels[0]):
+    for f in set(kmeans_labels):
         match += int(f in gt)
 
     return match / len(gt) * 100

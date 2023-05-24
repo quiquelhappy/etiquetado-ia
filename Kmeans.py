@@ -261,4 +261,4 @@ def get_colors(centroids):
         labels: list of K labels corresponding to one of the 11 basic colors
     """
     color_dist = utils.get_color_prob(centroids)
-    return [utils.colors[np.argmax(color_dist,axis=1)]]
+    return utils.colors[np.argmax(color_dist,axis=1)]
