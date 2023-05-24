@@ -28,4 +28,4 @@ jobs:
           python -m unittest TestCases_kmeans.py
       - name: My Labeling Test
         run: |
-          python my_labeling.py
+          python -m unittest my_labeling.py
