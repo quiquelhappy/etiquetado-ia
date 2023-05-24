@@ -99,15 +99,18 @@ class TestCases(unittest.TestCase):
     accuracy_min_k = 2
     accuracy_max_k = 17
 
+    # quick KNN init
     def test_a_knn_init(self):
         kn.KNN(self.train_imgs, self.train_class_labels)
 
+    # visualize a 3D dot cloud
     def test_a_three_d_cloud(self):
         kme = km.KMeans(self.train_imgs[0], 3)
         kme.fit()
         visualize_k_means(kme, [80, 60, 3])
         Plot3DCloud(kme)
 
+    # return top_n images matching the color feature
     def test_b_retrieval_by_color(self):
         visualize_retrieval(
             np.array([
@@ -116,6 +119,7 @@ class TestCases(unittest.TestCase):
             self.top_n
         )
 
+    # return top_n images matching the shape feature
     def test_b_retrieval_by_shape(self):
         visualize_retrieval(
             np.array([
@@ -124,6 +128,7 @@ class TestCases(unittest.TestCase):
             self.top_n
         )
 
+    # return top_n images matching both the color and shape features specified
     def test_b_retrieval_combined(self):
         visualize_retrieval(
             np.array([
@@ -133,12 +138,24 @@ class TestCases(unittest.TestCase):
             self.top_n
         )
 
+    # with this test, we should see that the first init usually causes a
+    # high n of iterations, so it is suboptimal. As with any init technique,
+    # when we increase k, the n of iterations will usually increase proportionally,
+    # since we need to initialize more centroids
     def test_c_kmeans_init_first(self):
         kmeans_init_test(self.init_source, 2, 14, 10, 'first')
 
+    # with this test, we should see that the custom init usually causes the
+    # least n of iterations, so it is usually most optimal. As with any init technique,
+    # when we increase k, the n of iterations will usually increase proportionally,
+    # since we need to initialize more centroids
     def test_c_kmeans_init_custom(self):
         kmeans_init_test(self.init_source, 2, 14, 10, 'custom')
 
+    # with this test, we should see that the random init usually causes the
+    # most n of iterations, so it is suboptimal. As with any init technique,
+    # when we increase k, the n of iterations will usually increase proportionally,
+    # since we need to initialize more centroids
     def test_c_kmeans_init_random(self):
         kmeans_init_test(self.init_source, 2, 14, 10, 'random')
 
@@ -151,6 +168,10 @@ class TestCases(unittest.TestCase):
     def test_d_find_best_k_fisher(self):
         find_best_k_test(0, 50, 'fisher', self.test_imgs, self.test_color_labels)
 
+    # this test compares the KMeans result to the ground truth, with
+    # multiple values of k, so we can see performance based on the k value.
+    # since we are able to run a subset of the sample, we get the first
+    # n accuracy_sample_size images to test our accuracy
     def test_e_accuracy_color(self):
         x_axis = range(self.accuracy_min_k, self.accuracy_max_k)
         color_accuracy = []
@@ -168,6 +189,8 @@ class TestCases(unittest.TestCase):
 
         print_plot(x_axis, color_accuracy, "k", "Accuracy %", "Color Accuracy")
 
+    # this test compares the KNN result to the expected ground truth, with
+    # multiple values of k, so we can see accuracy performance by k value
     def test_e_accuracy_shape(self):
         x_axis = range(self.accuracy_min_k, self.accuracy_max_k)
         shape_accuracy = []
