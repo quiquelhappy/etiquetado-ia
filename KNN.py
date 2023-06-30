@@ -20,7 +20,7 @@ class KNN:
         D = np.array(train_data, dtype=float)
 
         # Obtiene la forma de la matriz de entrenamiento y la asigna a D
-        D = np.shape(train_data)
+        D = np.shape(D)
 
         # Reorganiza los datos de entrenamiento en una matriz de tamaño PxD
         # donde D = 4800*3, esto significa que cada imagen en train_data
